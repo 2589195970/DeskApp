@@ -37,17 +37,17 @@ build_options = {
         "traceback"
     ],
     "excludes": [
-        "tkinter",  # 排除不需要的GUI库
         "unittest",
-        "email",
+        "email", 
         "html",
         "urllib",
-        "xml"
+        "xml",
+        "test"
     ],
     "include_files": [
         # 包含配置文件和其他资源
     ],
-    "zip_include_packages": "*",  # 压缩包减小体积
+    "zip_include_packages": ["*"],  # 压缩包减小体积
     "optimize": 2,  # 最高级别优化
     "build_exe": "build/UniversityMarking_LockService"
 }

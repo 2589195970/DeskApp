@@ -59,7 +59,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install cx_Freeze
-        pip install tkinter || echo "tkinter already available"
         
     - name: Create setup.py for ChangeConfigUtil
       working-directory: ./ChangeConfigUtil
@@ -79,6 +78,7 @@ jobs:
             "build_exe": {
                 "packages": ["tkinter", "json", "os"],
                 "include_files": [],
+                "zip_include_packages": ["*"],
             },
         }
         
