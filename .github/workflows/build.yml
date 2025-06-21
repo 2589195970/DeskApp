@@ -118,19 +118,22 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '16'
+        node-version: '16.20.0'
         cache: 'npm'
         cache-dependency-path: Electron_App/package-lock.json
         
     - name: Install dependencies
       working-directory: ./Electron_App
       run: npm ci
+      env:
+        NODE_OPTIONS: "--openssl-legacy-provider"
       
     - name: Build Electron App
       working-directory: ./Electron_App
       run: npm run electron:build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NODE_OPTIONS: "--openssl-legacy-provider"
         
     - name: Upload Electron Build Artifacts
       uses: actions/upload-artifact@v4
