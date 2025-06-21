@@ -151,25 +151,21 @@ jobs:
     - name: Prepare installer directory structure
       run: |
         # Create directory structure expected by installer.iss
-        New-Item -ItemType Directory -Force -Path ".\Electron_App\dist"
-        New-Item -ItemType Directory -Force -Path ".\LockSys_Python\dist\win32"
-        New-Item -ItemType Directory -Force -Path ".\LockSys_Python\dist\win64"
-        New-Item -ItemType Directory -Force -Path ".\ChangeConfigUtil\dist\win32"
-        New-Item -ItemType Directory -Force -Path ".\ChangeConfigUtil\dist\win64"
+        New-Item -ItemType Directory -Force -Path ".\Electron_App\dist_electron"
+        New-Item -ItemType Directory -Force -Path ".\LockSys_Python\build"
+        New-Item -ItemType Directory -Force -Path ".\ChangeConfigUtil\build"
         
         # Copy artifacts to expected locations
         if (Test-Path "electron-app-windows") {
-          Copy-Item -Path "electron-app-windows\*" -Destination ".\Electron_App\dist\" -Recurse -Force
+          Copy-Item -Path "electron-app-windows\*" -Destination ".\Electron_App\dist_electron\" -Recurse -Force
         }
         
         if (Test-Path "python-lock-service-windows") {
-          Copy-Item -Path "python-lock-service-windows\*" -Destination ".\LockSys_Python\dist\win64\" -Recurse -Force
-          Copy-Item -Path "python-lock-service-windows\*" -Destination ".\LockSys_Python\dist\win32\" -Recurse -Force
+          Copy-Item -Path "python-lock-service-windows\*" -Destination ".\LockSys_Python\build\" -Recurse -Force
         }
         
         if (Test-Path "config-utility-windows") {
-          Copy-Item -Path "config-utility-windows\*" -Destination ".\ChangeConfigUtil\dist\win64\" -Recurse -Force
-          Copy-Item -Path "config-utility-windows\*" -Destination ".\ChangeConfigUtil\dist\win32\" -Recurse -Force
+          Copy-Item -Path "config-utility-windows\*" -Destination ".\ChangeConfigUtil\build\" -Recurse -Force
         }
         
         # Create missing resource files if they don't exist
@@ -196,7 +192,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: university-marking-installer
-        path: dist/UniversityMarking-Setup.exe
+        path: dist/智多分机考霸屏桌面端-Setup.exe
         retention-days: 30
 
   create-release-package:
@@ -239,8 +235,8 @@ jobs:
         cp -r Start_Bat/* release-package/Start_Bat/
         
         # Copy Windows installer (main deliverable)
-        if [ -f "university-marking-installer/UniversityMarking-Setup.exe" ]; then
-          cp university-marking-installer/UniversityMarking-Setup.exe release-package/
+        if [ -f "university-marking-installer/智多分机考霸屏桌面端-Setup.exe" ]; then
+          cp university-marking-installer/智多分机考霸屏桌面端-Setup.exe release-package/
         fi
         
         # Copy documentation
