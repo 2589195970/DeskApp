@@ -16,11 +16,9 @@ AllowNoIcons=yes
 LicenseFile=resources\license.txt
 OutputDir=..\..\dist
 OutputBaseFilename=UniversityMarking-Setup
-SetupIconFile=resources\icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
-WizardImageFile=resources\banner.bmp
 
 ; 架构支持配置
 ArchitecturesAllowed=x86 x64
@@ -75,8 +73,8 @@ Source: "..\..\Start_Bat\start.bat"; DestDir: "{app}"; Flags: ignoreversion; Com
 ; 服务管理脚本
 Source: "resources\install-service.bat"; DestDir: "{app}"; Flags: ignoreversion; Components: lockservice
 
-; 应用图标
-Source: "resources\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+; 应用图标 (使用Electron应用的图标)
+Source: "..\..\Electron_App\public\favicon.ico"; DestDir: "{app}"; DestName: "icon.ico"; Flags: ignoreversion
 
 ; Python运行时 (32位系统)
 Source: "..\..\runtime\python-runtime-win32\*"; DestDir: "{app}\runtime"; Flags: ignoreversion recursesubdirs createallsubdirs; Check: not IsWin64; Components: lockservice
