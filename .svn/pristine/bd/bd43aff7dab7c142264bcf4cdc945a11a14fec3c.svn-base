@@ -1,0 +1,229 @@
+'use strict'
+
+import { app, BrowserWindow ,globalShortcut,ipcMain  } from 'electron'
+import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
+const path = require('path');
+const fs = require('fs');
+import axios from 'axios';
+
+let mainWindow = null;
+let mainWindowsFocus = true;
+let mainWindowsStateInterval = null
+let childWindow = null;
+let configInfo = {};
+
+const preloadScriptPath = path.join(__dirname,'..','config', 'preload.js');
+
+function createAlertWindow(message) {
+  const alertWindow = new BrowserWindow({
+    width: 400,
+    height: 200,
+    frame: false,
+    alwaysOnTop: true,
+    modal: true,
+    show: true,
+    webPreferences: {
+      nodeIntegration: true,
+    },
+  });
+
+  alertWindow.loadURL(`data:text/html;charset=utf-8,
+    <html>
+      <body style="display: flex; align-items: center; justify-content: center; height: 100%; margin: 0;">
+        <div style="text-align: center;">
+          <h2>${message}</h2>
+        </div>
+      </body>
+    </html>`);
+    setTimeout(() => {
+      if (alertWindow) {
+        alertWindow.hide();
+      }
+    }, 1000);
+}
+
+
+function fullScreen() {
+  if (process.platform === 'darwin') {
+    mainWindow.setSimpleFullScreen(true);
+  } else {
+    mainWindow.setFullScreen(true);
+  }
+  mainWindow.show();
+}
+
+function openInputDialog() {
+  mainWindowsFocus = false;
+  createChildWindow();
+  childWindow.show();
+}
+
+function CheckProcess() {
+  if (mainWindow) {
+    mainWindowsStateInterval = setInterval(() => {
+      if (!mainWindow.isAlwaysOnTop()) {
+        mainWindow.setAlwaysOnTop(true);
+      }
+      if (!mainWindow.isFocused() && mainWindowsFocus) {
+        mainWindow.focus();
+      }
+      if (mainWindow.isMinimized()) {
+        mainWindow.show();
+        fullScreen();
+      }
+    }, 100);
+  }
+}
+
+function createChildWindow() {
+  if (childWindow != null) {
+    return;
+  }
+  childWindow = new BrowserWindow({ 
+    parent: mainWindow,
+    width: 600,
+    height: 360,
+    center: true,
+    show: false,
+    modal: true,
+    "resizable": true,
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      nodeIntegration: true,
+      preload: preloadScriptPath, // 加载 preload 脚本
+    },
+  })
+
+  childWindow.loadURL('app://./index.html');
+}
+
+async function syncReq(url) {
+  const res = await axios.get(url);
+  return res
+}
+
+async function createWindow() {
+  // Create the browser window.
+
+  mainWindow = new BrowserWindow({
+    show: false,
+    width: 1024,
+    height: 728,
+    center: true,
+    frame: true,
+    "resizable": true,
+    fullscreen: true,
+    alwaysOnTop: true,
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      nodeIntegration: true,
+      preload: preloadScriptPath, // 加载 preload 脚本
+    },
+  });
+  createProtocol('app')
+
+  // 读取 setConfig.json 文件中的 URL
+  const setFilePath = path.join(__dirname,'..', 'config', 'setConfig.json');
+  // 同步读取文件内容
+  const data = fs.readFileSync(setFilePath, 'utf-8');
+  // 解析 JSON 数据
+  configInfo = JSON.parse(data);
+  // 锁定键盘
+  await syncReq(configInfo.LockUrl);
+
+  
+  mainWindow.loadURL('app://./index.html');
+  mainWindow.loadURL(configInfo.mainUrl+'?_r='+Math.random());
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (!mainWindow) {
+      throw new Error('"mainWindow" is not defined');
+    }
+    if (process.env.START_MINIMIZED) {
+      mainWindow.minimize();
+    } else {
+      mainWindow.show();
+    }
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+  // 注册 F11 全屏快捷键并禁用
+  globalShortcut.register('F11', () => {
+    // 空操作，即不执行任何操作
+  });
+  
+  globalShortcut.register('ctrl+w', () => {
+    // 空操作，即不执行任何操作
+  });
+
+  // 注册 alt+F1 打开解锁密码窗
+  globalShortcut.register('ctrl+F10', () => {
+    if (childWindow == null) {
+      openInputDialog()
+    }else{
+      if (childWindow.isVisible()) {
+        mainWindowsFocus = true;
+        childWindow.hide();
+      }else{
+        openInputDialog()
+      }
+    }
+  });
+  
+  // 监听
+  ipcMain.on('userCloseUnLockWindow',(even,arg) =>{
+    if (childWindow != null) {
+      mainWindowsFocus = true;
+      childWindow.hide();
+    }
+  })
+  ipcMain.on('userWantCloseTheApp',async (even,args) =>{
+    if (args == configInfo.UnLockPassWord) {
+      await syncReq(configInfo.UnLockUrl);
+      if (process.platform !== 'darwin') {
+        app.quit()
+      }
+    }else{
+      createAlertWindow("密码输入错误，请重新输入");
+    }
+  })
+
+  mainWindow.webContents.on('new-window', (event, url) => {
+    event.preventDefault();
+    shell.openExternal(url);
+  });
+  CheckProcess();
+  // full Screen！
+  fullScreen();
+}
+
+
+// Quit when all windows are closed.
+app.on('window-all-closed', () => {
+  // On macOS it is common for applications and their menu bar
+  // to stay active until the user quits explicitly with Cmd + Q
+  if (mainWindowsStateInterval) {
+    clearInterval(mainWindowsStateInterval)
+    mainWindowsStateInterval = null
+  }
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.whenReady().then(createWindow).catch(console.log);
+
+app.on('activate', () => {
+  // On macOS it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (mainWindow === null) createWindow();
+})
+app.on('will-quit', () => {
+  if (mainWindowsStateInterval) {
+    clearInterval(mainWindowsStateInterval)
+    mainWindowsStateInterval = null
+  }
+  // 注销全局快捷键，以确保在退出应用程序时释放
+  globalShortcut.unregisterAll();
+});

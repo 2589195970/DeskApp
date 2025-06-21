@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="GB2312"?>
+<InstallProject>
+<Version>YingInstall5.40</Version>
+<Task ID="2401" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetAllVar">
+<ProjectName>umdeskapp</ProjectName>
+<InstallPath>c:\umdeskapp</InstallPath>
+<PathLoadFromRegistry>0</PathLoadFromRegistry>
+<IsNoFoundStopInstall>0</IsNoFoundStopInstall>
+<RegRootKey>HKEY_LOCAL_MACHINE</RegRootKey>
+<RegSubKey>\Software\SoftwareCompany\MySoftware</RegSubKey>
+<RegVarName>InstallPath</RegVarName>
+<InstallStopDesc>找不到相关应用程序，升级过程终止！</InstallStopDesc>
+<CompanyDesc>DataOn</CompanyDesc>
+<ProductVersion>6.0</ProductVersion>
+<FileVersion>6.0.0.0</FileVersion>
+<DiskSize>671088640</DiskSize>
+<AdPicture></AdPicture>
+<MusicPath></MusicPath>
+<TopFramePicture></TopFramePicture>
+<OutPutPath></OutPutPath>
+<ProvideForInstall></ProvideForInstall>
+<AppFileIcon></AppFileIcon>
+<BackgroundInstall>0</BackgroundInstall>
+<SpecCode></SpecCode>
+<Language>409,804,404</Language>
+</SubTask>
+</Task>
+<Task ID="2002" Type="ShowDialogBox" IsExec="1">
+<SubTask ID="10001" Type="ShowBitmap">
+<PosX>0</PosX>
+<PosY>0</PosY>
+<File></File>
+</SubTask>
+<SubTask ID="10002" Type="GetValue">
+<Description>|WelcomeWndDesc1||ProjectName||WelcomeWndDesc2|</Description>
+<Description>|WelcomeWndDesc3|</Description>
+<Description>|WelcomeWndDesc4|</Description>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>1</IsShow>
+</SubTask>
+</Task>
+<Task ID="2003" Type="ShowDialogBox" IsExec="0">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|ReadSoftDocSubject|</Subject>
+<Description>|ReadSoftDocDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="ShowSoftDoc">
+<FileType>S</FileType>
+<File></File>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>0</IsShow>
+</SubTask>
+</Task>
+<Task ID="2004" Type="ShowDialogBox" IsExec="0">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|ShowReadmeSubject|</Subject>
+<Description>|ShowReadmeDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="ShowReadme">
+<FileType>S</FileType>
+<File></File>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>0</IsShow>
+</SubTask>
+</Task>
+<Task ID="2005" Type="ShowDialogBox" IsExec="0">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|RegisterInfoSubject|</Subject>
+<Description>|RegisterInfoDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="EditBox">
+<Description>|RegisterInfoCompanyDesc|</Description>
+<Checked>1</Checked>
+<RegRootKey></RegRootKey>
+<RegSubKey></RegSubKey>
+<RegVarName></RegVarName>
+<RegVarValue></RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+<SubTask ID="10003" Type="EditBox">
+<Description>|RegisterInfoUserDesc|</Description>
+<Checked>1</Checked>
+<RegRootKey></RegRootKey>
+<RegSubKey></RegSubKey>
+<RegVarName></RegVarName>
+<RegVarValue></RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+<SubTask ID="10004" Type="EditBox">
+<Description>|RegisterInfoSNDesc|</Description>
+<Checked>1</Checked>
+<RegRootKey></RegRootKey>
+<RegSubKey></RegSubKey>
+<RegVarName></RegVarName>
+<RegVarValue></RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+<SubTask ID="10005" Type="Options">
+<IsShow>0</IsShow>
+</SubTask>
+</Task>
+<Task ID="2006" Type="ShowDialogBox" IsExec="1">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|ProgramFolderSubject|</Subject>
+<Description>|ProgramFolderDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="GetValue">
+<Description>|ProgramFolderDesc2|</Description>
+<Description>|ProgramFolderDesc3|</Description>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>1</IsShow>
+</SubTask>
+</Task>
+<Task ID="2007" Type="ShowDialogBox" IsExec="1">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|ChangePathSubject|</Subject>
+<Description>|ChangePathDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="GetValue">
+<Description>|ChangePathDesc2|</Description>
+<Description>|ChangePathFreeSpaceDesc1|</Description>
+<Description>|ChangePathFreeSpaceDesc2|</Description>
+<Description>|ChangePathSoftSizeDesc1|</Description>
+<Description>|ChangePathSoftSizeDesc2|</Description>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>1</IsShow>
+</SubTask>
+</Task>
+<Task ID="2008" Type="ShowDialogBox" IsExec="1">
+</Task>
+<Task ID="2009" Type="ShowDialogBox" IsExec="0">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|ShowFinishOneSubject|</Subject>
+<Description>|ShowFinishOneDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="GetValue">
+<Description>|ShowFinishOneDesc2|</Description>
+<Description>|ShowFinishOneDesc3|</Description>
+<Description>|ShowFinishOneDesc4|</Description>
+<Description>|ShowFinishOneDesc5|</Description>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>0</IsShow>
+</SubTask>
+</Task>
+<Task ID="2010" Type="ShowDialogBox" IsExec="1">
+<SubTask ID="10001" Type="ShowTopFrame">
+<Subject>|ShowFinishTwoSubject|</Subject>
+<Description>|ShowFinishTwoDesc|</Description>
+</SubTask>
+<SubTask ID="10002" Type="GetValue">
+<PosX>50</PosX>
+<PosY>100</PosY>
+<Description>|ShowFinishTwoDesc2|</Description>
+</SubTask>
+<SubTask ID="10003" Type="Options">
+<IsShow>1</IsShow>
+</SubTask>
+</Task>
+<Task ID="2402" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetAllVar">
+<PathDesc>[InstallDir]</PathDesc>
+<PathValue>F:\2025工作文档\机考客户端打包\InstallDir</PathValue>
+<PathDesc>[Windows Directory]</PathDesc>
+<PathValue></PathValue>
+<PathDesc>[Windows Directory]\Fonts</PathDesc>
+<PathValue></PathValue>
+<PathDesc>[System Directory]</PathDesc>
+<PathValue></PathValue>
+<PathDesc>[Desktop Directory]</PathDesc>
+<PathValue></PathValue>
+<PathDesc>[Program Files]</PathDesc>
+<PathValue></PathValue>
+</SubTask>
+</Task>
+<Task ID="2403" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+<ComList>XXX-XXX-XXX</ComList>
+</SubTask>
+</Task>
+<Task ID="2404" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+<Description>机考客户端</Description>
+</SubTask>
+<SubTask ID="10002" Type="CreateShortcutMenu">
+<Description>机考客户端</Description>
+<File>start.bat</File>
+<Folder>[InstallDir]</Folder>
+<Parameter></Parameter>
+<IconFile>[InstallDir]\wx8in-w4xlw-001.ico</IconFile>
+<IsToFileLinkGroup>1</IsToFileLinkGroup>
+<IsToDesktop>1</IsToDesktop>
+<IsToStartup>0</IsToStartup>
+<IsToQuickLaunch>0</IsToQuickLaunch>
+<IsSpecExec>0</IsSpecExec>
+<SpecExecDesc></SpecExecDesc>
+</SubTask>
+</Task>
+<Task ID="2405" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2406" Type="DataSetting" IsExec="0">
+<SubTask ID="999999" Type="Registry">
+<RegRootKey>HKEY_CLASSES_ROOT</RegRootKey>
+<RegSubKey>&#92;sdzdfcloudscan</RegSubKey>
+<RegVarName></RegVarName>
+<RegVarValue>sdzdfcloudscanProtocol</RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+<SubTask ID="999999" Type="Registry">
+<RegRootKey>HKEY_CLASSES_ROOT</RegRootKey>
+<RegSubKey>&#92;sdzdfcloudscan</RegSubKey>
+<RegVarName>URL Protocol</RegVarName>
+<RegVarValue>[InstallDir]&#92;HTTPScan.exe</RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+<SubTask ID="999999" Type="Registry">
+<RegRootKey>HKEY_CLASSES_ROOT</RegRootKey>
+<RegSubKey>&#92;sdzdfcloudscan&#92;DefaultIcon</RegSubKey>
+<RegVarName></RegVarName>
+<RegVarValue>[InstallDir]&#92;HTTPScan.exe,1</RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+<SubTask ID="999999" Type="Registry">
+<RegRootKey>HKEY_CLASSES_ROOT</RegRootKey>
+<RegSubKey>&#92;sdzdfcloudscan&#92;shell&#92;open&#92;command</RegSubKey>
+<RegVarName></RegVarName>
+<RegVarValue>&#34;[InstallDir]&#92;HTTPScan.exe&#34; &#34;&#37;1&#34;</RegVarValue>
+<RegDataType>0</RegDataType>
+<RegOperType>0</RegOperType>
+<IsOnlyToKey>0</IsOnlyToKey>
+<IsToDelete>1</IsToDelete>
+</SubTask>
+</Task>
+<Task ID="2407" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2414" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2413" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2408" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2409" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2415" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+</SubTask>
+</Task>
+<Task ID="2410" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+<CreateUnInstall1>1</CreateUnInstall1>
+<CreateUnInstall2>1</CreateUnInstall2>
+<UnInstallEx></UnInstallEx>
+</SubTask>
+</Task>
+<Task ID="2411" Type="DataSetting" IsExec="0">
+<SubTask ID="10001" Type="GetValue">
+<File>[InstallDir]\wx8in-w4xlw-001.ico</File>
+</SubTask>
+</Task>
+<Task ID="2412" Type="ExtractFiles" IsExec="0">
+<SubTask ID="10001" Type="FolderList">
+</SubTask>
+<SubTask ID="10002" Type="FileList">
+</SubTask>
+</Task>
+</InstallProject>

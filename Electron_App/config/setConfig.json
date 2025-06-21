@@ -1,0 +1,6 @@
+{
+    "mainUrl":"http://sdzdf.com/",
+    "LockUrl":"http://localhost:9529/SysLock",
+    "UnLockUrl":"http://localhost:9529/LockOut",
+    "UnLockPassWord":"sdzdf.com"
+}

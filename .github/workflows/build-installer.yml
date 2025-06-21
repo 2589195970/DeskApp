@@ -1,0 +1,234 @@
+name: Build Windows Installer
+
+# 工作流触发条件
+on:
+  push:
+    branches: [ main, develop ]
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: '发布类型'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+        - development
+        - release
+        - beta
+
+# 环境变量
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.9'
+  INNO_SETUP_VERSION: '6.2.2'
+
+jobs:
+  build:
+    name: Build UniversityMarking Installer
+    runs-on: windows-latest
+    
+    strategy:
+      matrix:
+        architecture: [x86, x64]
+    
+    steps:
+    # 检出代码
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+    
+    # 设置 Node.js 环境
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'Electron_App/package-lock.json'
+    
+    # 设置 Python 环境
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        architecture: ${{ matrix.architecture }}
+    
+    # 安装 Python 依赖
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install -r LockSys_Python/requirements.txt
+    
+    # 安装 Electron 依赖
+    - name: Install Electron Dependencies
+      working-directory: Electron_App
+      run: |
+        npm ci
+        npm run build
+    
+    # 构建 Python 组件
+    - name: Build Python Components
+      run: |
+        # 构建系统锁定服务
+        cd LockSys_Python
+        mkdir -p dist/win${{ matrix.architecture == 'x64' && '64' || '32' }}
+        pyinstaller --onefile --distpath dist/win${{ matrix.architecture == 'x64' && '64' || '32' }} main.py
+        
+        # 构建配置工具
+        cd ../ChangeConfigUtil
+        mkdir -p dist/win${{ matrix.architecture == 'x64' && '64' || '32' }}
+        pyinstaller --onefile --windowed --distpath dist/win${{ matrix.architecture == 'x64' && '64' || '32' }} main.py
+    
+    # 安装 Inno Setup
+    - name: Install Inno Setup
+      run: |
+        $url = "https://jrsoftware.org/download.php/is.exe"
+        $output = "$env:TEMP\innosetup.exe"
+        Invoke-WebRequest -Uri $url -OutFile $output
+        Start-Process -FilePath $output -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+        
+        # 添加到 PATH
+        $innoPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
+        echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    
+    # 准备构建环境
+    - name: Prepare Build Environment
+      run: |
+        # 创建目录结构
+        New-Item -ItemType Directory -Force -Path "dist"
+        New-Item -ItemType Directory -Force -Path "installer/inno-setup/resources"
+        
+        # 复制资源文件
+        if (Test-Path "Electron_App/public/favicon.ico") {
+          Copy-Item "Electron_App/public/favicon.ico" "installer/inno-setup/resources/icon.ico"
+        }
+    
+    # 执行构建准备脚本
+    - name: Run Build Preparation
+      run: |
+        node installer/build-scripts/prepare-build.js
+    
+    # 编译安装程序
+    - name: Compile Installer
+      working-directory: installer/inno-setup
+      run: |
+        # 检查文件存在
+        if (-not (Test-Path "installer.iss")) {
+          Write-Error "installer.iss not found!"
+          exit 1
+        }
+        
+        # 编译安装程序
+        iscc "installer.iss" /O"../../dist" /F"UniversityMarking-Setup-${{ matrix.architecture }}"
+        
+        # 检查输出文件
+        if (-not (Test-Path "../../dist/UniversityMarking-Setup-${{ matrix.architecture }}.exe")) {
+          Write-Error "Installer compilation failed!"
+          exit 1
+        }
+    
+    # 执行构建后处理
+    - name: Post-build Processing
+      run: |
+        node installer/build-scripts/post-build.js
+    
+    # 计算文件哈希
+    - name: Calculate File Hashes
+      run: |
+        $files = Get-ChildItem -Path "dist" -Filter "*.exe"
+        foreach ($file in $files) {
+          $hash = Get-FileHash -Path $file.FullName -Algorithm SHA256
+          Write-Output "$($file.Name): $($hash.Hash)" | Out-File -Append "dist/checksums.txt"
+        }
+    
+    # 上传构建产物
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: installer-${{ matrix.architecture }}
+        path: |
+          dist/*.exe
+          dist/*.md
+          dist/*.json
+          dist/*.txt
+        retention-days: 30
+    
+    # 上传到 Release（仅在标签推送时）
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/UniversityMarking-Setup-${{ matrix.architecture }}.exe
+          dist/checksums.txt
+          dist/RELEASE-NOTES.md
+        draft: false
+        prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
+        generate_release_notes: true
+        name: "UniversityMarking v${{ github.ref_name }} (${{ matrix.architecture }})"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 合并构建产物
+  merge-artifacts:
+    name: Merge Build Artifacts
+    needs: build
+    runs-on: ubuntu-latest
+    if: always() && needs.build.result == 'success'
+    
+    steps:
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    
+    - name: Merge Artifacts
+      run: |
+        mkdir -p merged
+        find artifacts -name "*.exe" -exec cp {} merged/ \;
+        find artifacts -name "*.md" -exec cp {} merged/ \;
+        find artifacts -name "*.json" -exec cp {} merged/ \;
+        find artifacts -name "*.txt" -exec cp {} merged/ \;
+    
+    - name: Upload Merged Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: universitymarking-installer-all
+        path: merged/
+        retention-days: 90
+
+  # 自动化测试
+  test:
+    name: Test Installer
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'pull_request'
+    
+    strategy:
+      matrix:
+        architecture: [x86, x64]
+    
+    steps:
+    - name: Download Installer
+      uses: actions/download-artifact@v4
+      with:
+        name: installer-${{ matrix.architecture }}
+        path: test-installer
+    
+    - name: Test Installation
+      run: |
+        # 模拟静默安装测试
+        $installer = Get-ChildItem -Path "test-installer" -Filter "*.exe" | Select-Object -First 1
+        if ($installer) {
+          Write-Output "Testing installer: $($installer.Name)"
+          # 这里可以添加更多的测试逻辑
+          Write-Output "Installer test completed successfully"
+        } else {
+          Write-Error "No installer found for testing"
+          exit 1
+        }

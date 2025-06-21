@@ -1,0 +1,46 @@
+{
+    "productName": "山东智多分机考桌面端",
+    "appId": "sdzdf.electron.ExamDesk-001",
+    "directories": {
+      "output": "release" 
+    },
+    "files": ["dist_electron","build","config"],
+    "extraResources": ["config","build"],
+    "asar": true,
+    "nsis": {
+      "oneClick": false,
+      "language": "2052",
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "win": {
+      "icon": "dist/favicon.ico",
+      "target": {
+        "target": "nsis",
+        "arch": [ 
+            "ia32"
+        ]
+      }
+    },
+    "dmg": {
+      "sign": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "dist/osicon.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "dist/winicon.png",
+      "artifactName": "${productName} v${version}.${ext}",
+      "desktop": {
+        "Icon": "/opt/v3-electron-vite/resources/app/dist/winicon.png"
+      }
+    }
+  }
+  

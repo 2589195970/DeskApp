@@ -1,0 +1,26 @@
+# -*- coding: utf-8 -*-
+import sys
+from cx_Freeze import setup, Executable
+
+base = None
+if sys.platform == "win32":
+    base = "Win32GUI"
+
+executables = [
+    Executable("main.py",base=base)  # 输出的可执行文件的名称
+]
+
+options = {
+    "build_exe": {
+        "packages": ["flask", "gevent", "threading", "logging", "PyHook3", "portalocker"],  # 包含 Flask 在内的依赖包
+        "include_files": [],  # 包含其他文件或目录
+    },
+}
+
+setup(
+    name="SysLockServerBySdzdf",
+    version="1.0",
+    description="WindowsDeskServeBySdzdf",
+    options=options,
+    executables=executables
+)

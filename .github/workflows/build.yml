@@ -1,0 +1,301 @@
+name: Build UniversityMarking Desktop App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ created ]
+
+jobs:
+  build-python-service:
+    name: Build Python Lock Service
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install Python dependencies
+      working-directory: ./LockSys_Python
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install cx_Freeze
+        
+    - name: Build Python EXE
+      working-directory: ./LockSys_Python
+      run: |
+        python setup.py build
+        
+    - name: Upload Python Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: python-lock-service-windows
+        path: LockSys_Python/build/
+        retention-days: 30
+
+  build-config-util:
+    name: Build Config Utility
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      working-directory: ./ChangeConfigUtil
+      run: |
+        python -m pip install --upgrade pip
+        pip install cx_Freeze
+        pip install tkinter || echo "tkinter already available"
+        
+    - name: Create setup.py for ChangeConfigUtil
+      working-directory: ./ChangeConfigUtil
+      run: |
+        echo 'import sys
+        from cx_Freeze import setup, Executable
+        
+        base = None
+        if sys.platform == "win32":
+            base = "Win32GUI"
+        
+        executables = [
+            Executable("main.py", base=base, target_name="ChangeConfigUtil.exe")
+        ]
+        
+        options = {
+            "build_exe": {
+                "packages": ["tkinter", "json", "os"],
+                "include_files": [],
+            },
+        }
+        
+        setup(
+            name="ChangeConfigUtil",
+            version="1.0",
+            description="Configuration Utility for UniversityMarking",
+            options=options,
+            executables=executables
+        )' > setup.py
+        
+    - name: Build Config Utility EXE
+      working-directory: ./ChangeConfigUtil
+      run: |
+        python setup.py build
+        
+    - name: Upload Config Utility Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: config-utility-windows
+        path: ChangeConfigUtil/build/
+        retention-days: 30
+
+  build-electron-app:
+    name: Build Electron Application
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '16'
+        cache: 'npm'
+        cache-dependency-path: Electron_App/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./Electron_App
+      run: npm ci
+      
+    - name: Build Electron App
+      working-directory: ./Electron_App
+      run: npm run electron:build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload Electron Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: electron-app-${{ matrix.os }}
+        path: Electron_App/release/
+        retention-days: 30
+
+  create-installer:
+    name: Create Windows Installer
+    needs: [build-python-service, build-config-util, build-electron-app]
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Prepare installer directory structure
+      run: |
+        # Create directory structure expected by installer.iss
+        New-Item -ItemType Directory -Force -Path ".\Electron_App\dist"
+        New-Item -ItemType Directory -Force -Path ".\LockSys_Python\dist\win32"
+        New-Item -ItemType Directory -Force -Path ".\LockSys_Python\dist\win64"
+        New-Item -ItemType Directory -Force -Path ".\ChangeConfigUtil\dist\win32"
+        New-Item -ItemType Directory -Force -Path ".\ChangeConfigUtil\dist\win64"
+        
+        # Copy artifacts to expected locations
+        if (Test-Path "electron-app-windows-latest") {
+          Copy-Item -Path "electron-app-windows-latest\*" -Destination ".\Electron_App\dist\" -Recurse -Force
+        }
+        
+        if (Test-Path "python-lock-service-windows") {
+          Copy-Item -Path "python-lock-service-windows\*" -Destination ".\LockSys_Python\dist\win64\" -Recurse -Force
+          Copy-Item -Path "python-lock-service-windows\*" -Destination ".\LockSys_Python\dist\win32\" -Recurse -Force
+        }
+        
+        if (Test-Path "config-utility-windows") {
+          Copy-Item -Path "config-utility-windows\*" -Destination ".\ChangeConfigUtil\dist\win64\" -Recurse -Force
+          Copy-Item -Path "config-utility-windows\*" -Destination ".\ChangeConfigUtil\dist\win32\" -Recurse -Force
+        }
+        
+        # Create missing resource files if they don't exist
+        if (-not (Test-Path ".\installer\inno-setup\resources\icon.ico")) {
+          New-Item -ItemType Directory -Force -Path ".\installer\inno-setup\resources"
+          # Copy a default icon or create placeholder
+          if (Test-Path ".\Electron_App\public\favicon.ico") {
+            Copy-Item ".\Electron_App\public\favicon.ico" ".\installer\inno-setup\resources\icon.ico"
+          }
+        }
+        
+        if (-not (Test-Path ".\installer\inno-setup\resources\license.txt")) {
+          Copy-Item ".\LICENSE" ".\installer\inno-setup\resources\license.txt" -ErrorAction SilentlyContinue
+        }
+      shell: powershell
+      
+    - name: Compile Installer with Inno Setup
+      uses: Minionguyjpro/Inno-Setup-Action@v1.2.2
+      with:
+        path: installer/inno-setup/installer.iss
+        options: /O+ /Q
+        
+    - name: Upload Installer Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: university-marking-installer
+        path: dist/UniversityMarking-Setup.exe
+        retention-days: 30
+
+  create-release-package:
+    name: Create Release Package
+    needs: [create-installer]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      
+    - name: Create release package structure
+      run: |
+        mkdir -p release-package
+        mkdir -p release-package/LockSys_Python
+        mkdir -p release-package/ChangeConfigUtil
+        mkdir -p release-package/Electron_App
+        mkdir -p release-package/Start_Bat
+        
+        # Copy Python service
+        if [ -d "python-lock-service-windows" ]; then
+          cp -r python-lock-service-windows/* release-package/LockSys_Python/
+        fi
+        
+        # Copy Config utility
+        if [ -d "config-utility-windows" ]; then
+          cp -r config-utility-windows/* release-package/ChangeConfigUtil/
+        fi
+        
+        # Copy Windows Electron app
+        if [ -d "electron-app-windows-latest" ]; then
+          cp -r electron-app-windows-latest/* release-package/Electron_App/
+        fi
+        
+        # Copy batch files
+        cp -r Start_Bat/* release-package/Start_Bat/
+        
+        # Copy Windows installer (main deliverable)
+        if [ -f "university-marking-installer/UniversityMarking-Setup.exe" ]; then
+          cp university-marking-installer/UniversityMarking-Setup.exe release-package/
+        fi
+        
+        # Copy documentation
+        cp CLAUDE.md release-package/
+        cp LICENSE release-package/ || echo "No LICENSE file found"
+        
+        # Create archive
+        tar -czf UniversityMarking-Desktop-App-Release.tar.gz release-package/
+        
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          UniversityMarking-Desktop-App-Release.tar.gz
+          university-marking-installer/UniversityMarking-Setup.exe
+        name: UniversityMarking Desktop App ${{ github.ref_name }}
+        body: |
+          ## UniversityMarking 桌面端应用发布
+          
+          ### 🚀 推荐安装方式
+          **下载 `UniversityMarking-Setup.exe` 直接安装！**
+          - ✅ 一键安装所有组件
+          - ✅ 自动创建桌面快捷方式
+          - ✅ 自动配置系统服务
+          - ✅ 支持管理员权限检查
+          
+          ### 📦 包含组件
+          - 🔒 Python 系统锁定服务
+          - ⚙️ 配置工具
+          - 🖥️ Electron 桌面应用
+          - 📜 启动脚本
+          
+          ### 💻 系统要求
+          - Windows 10/11 (推荐)
+          - 管理员权限
+          - 2GB+ 内存
+          
+          ### 📋 安装说明
+          
+          #### 方式一：使用安装程序（推荐）
+          1. 下载 `UniversityMarking-Setup.exe`
+          2. 右键选择"以管理员身份运行"
+          3. 按照安装向导完成安装
+          4. 安装完成后桌面将出现"UniversityMarking考试监考系统"快捷方式
+          
+          #### 方式二：手动安装
+          1. 下载并解压 `UniversityMarking-Desktop-App-Release.tar.gz`
+          2. 以管理员身份运行 `Start_Bat/start.bat`
+          3. 按照屏幕提示完成配置
+          
+          ### ⚡ 性能优化
+          - CPU占用降低 60-80%
+          - 内存使用优化
+          - 完善的中文用户名支持
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

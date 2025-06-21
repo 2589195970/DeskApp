@@ -1,0 +1,104 @@
+# -*- coding: utf-8 -*-
+import ctypes
+import sys
+from flask import Flask
+from gevent import pywsgi
+import threading
+import os
+import log_config
+import traceback
+import socket
+
+from lock import lockMain
+from unlock import unlockMain
+
+flag_file = "flag.txt"
+# 检查文件是否存在
+if not os.path.isfile(flag_file):
+    # 文件不存在，创建它
+    with open(flag_file, "w+", encoding='utf-8') as file:
+        # 可以在这里写入一些内容到文件中
+        pass  # 这里仅仅创建文件，不写入内容
+
+    log_config.logging.info(f"文件 '{flag_file}' 不存在，已创建。")
+
+
+def notify_child_process(key):
+    with open(flag_file, "w+", encoding='utf-8') as file:
+        file.write(key)
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(("127.0.0.1", port))
+            return False
+        except OSError:
+            return True
+
+# 提升权限
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+
+def elevate():
+    if not is_admin():
+        # 提升权限
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 0)
+
+elevate()
+# 要调用的脚本文件
+lockPath = "lock.py"
+unlockPath = "unlock.py"
+child_process = None
+loclState = False
+
+app = Flask(__name__)
+
+
+@app.route("/SysLock")
+def SysLock():
+    # 锁定系统快捷键
+    global child_process, loclState
+    if not loclState:
+        notify_child_process("run")
+        child_process = threading.Thread(target=lockMain)
+        child_process.start()
+        loclState = True
+    else:
+        log_config.logging.info("当前已锁定，禁止重复锁定监听")
+    return "<p>SysLock</p>"
+
+
+@app.route("/LockOut")
+def LockOut():
+    global child_process, loclState
+    if child_process and loclState:
+        # 发送 SIGTERM 信号给 lock.py 进程
+        notify_child_process("exit")
+        child_process.join()
+        child_process = None
+        # # 注册表清理操作
+        unlockMain()
+        log_config.logging.info("终止子线程,已退出锁定")
+    else:
+        log_config.logging.info("当前尚未锁定，禁止解锁")
+    loclState = False
+    return "<p>UnLock Ok</p>"
+
+
+if __name__ == "__main__":
+    try:
+        # 检查 9529 端口是否被占用
+        port_in_use = is_port_in_use(9529)
+        if port_in_use:
+            sys.exit()
+        else:
+            server = pywsgi.WSGIServer(('127.0.0.1', 9529), app)
+            server.serve_forever()
+    except Exception as e:
+        # 这将捕获所有异常，并使用 traceback 打印出错误信息。然后程序将等待用户按下任意键，以便您可以查看错误信息并解决问题。
+        traceback.print_exc()
+        input("请联系研发人员处理。")

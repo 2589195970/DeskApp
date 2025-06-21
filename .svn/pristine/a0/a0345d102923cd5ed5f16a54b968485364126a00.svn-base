@@ -1,0 +1,5 @@
+PyHook3~=1.6.1
+Flask~=2.2.5
+gevent~=22.10.2
+py2exe~=0.12.0.2
+portalocker~=2.7.0
