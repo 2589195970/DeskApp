@@ -124,16 +124,17 @@ jobs:
         
     - name: Install dependencies
       working-directory: ./Electron_App
-      run: npm ci
-      env:
-        NODE_OPTIONS: "--openssl-legacy-provider"
+      run: |
+        export NODE_OPTIONS="--openssl-legacy-provider"
+        npm ci
       
     - name: Build Electron App
       working-directory: ./Electron_App
-      run: npm run electron:build
+      run: |
+        export NODE_OPTIONS="--openssl-legacy-provider"
+        npm run electron:build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        NODE_OPTIONS: "--openssl-legacy-provider"
         
     - name: Upload Electron Build Artifacts
       uses: actions/upload-artifact@v4
