@@ -120,17 +120,11 @@ jobs:
         
     - name: Install dependencies
       working-directory: ./Electron_App
-      run: |
-        $env:NODE_OPTIONS="--openssl-legacy-provider"
-        npm ci
-      shell: powershell
+      run: npm ci
       
     - name: Build Electron App
       working-directory: ./Electron_App
-      run: |
-        $env:NODE_OPTIONS="--openssl-legacy-provider"
-        npm run electron:build
-      shell: powershell
+      run: node --openssl-legacy-provider ./node_modules/.bin/vue-cli-service electron:build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         

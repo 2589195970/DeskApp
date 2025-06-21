@@ -1,8 +1,8 @@
 {
-    "productName": "山东智多分机考桌面端",
-    "appId": "sdzdf.electron.ExamDesk-001",
+    "productName": "智多分机考霸屏桌面端",
+    "appId": "zhiduofen.exam.deskapp",
     "directories": {
-      "output": "release" 
+      "output": "dist_electron" 
     },
     "files": ["dist_electron","build","config"],
     "extraResources": ["config","build"],
@@ -11,35 +11,15 @@
       "oneClick": false,
       "language": "2052",
       "perMachine": true,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "win": {
-      "icon": "dist/favicon.ico",
+      "icon": "public/favicon.ico",
       "target": {
         "target": "nsis",
-        "arch": [ 
-            "ia32"
-        ]
-      }
-    },
-    "dmg": {
-      "sign": false
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "dist/osicon.png",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "dist/winicon.png",
-      "artifactName": "${productName} v${version}.${ext}",
-      "desktop": {
-        "Icon": "/opt/v3-electron-vite/resources/app/dist/winicon.png"
+        "arch": ["x64", "ia32"]
       }
     }
   }
