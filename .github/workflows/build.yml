@@ -35,7 +35,7 @@ jobs:
         python setup.py build
         
     - name: Upload Python Build Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: python-lock-service-windows
         path: LockSys_Python/build/
@@ -96,7 +96,7 @@ jobs:
         python setup.py build
         
     - name: Upload Config Utility Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: config-utility-windows
         path: ChangeConfigUtil/build/
@@ -132,7 +132,7 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Upload Electron Build Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: electron-app-${{ matrix.os }}
         path: Electron_App/release/
@@ -148,7 +148,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       
     - name: Prepare installer directory structure
       run: |
@@ -195,7 +195,7 @@ jobs:
         options: /O+ /Q
         
     - name: Upload Installer Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: university-marking-installer
         path: dist/UniversityMarking-Setup.exe
@@ -212,7 +212,7 @@ jobs:
       uses: actions/checkout@v4
       
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       
     - name: Create release package structure
       run: |
