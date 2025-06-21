@@ -6,11 +6,11 @@
 #define MyAppPublisher "智多分技术团队"
 #define MyAppURL "https://github.com/your-repo/UniversityMarking"
 
-; 动态检测架构
+; 专注32位架构
 #ifdef ARCHITECTURE
   #define TargetArch ARCHITECTURE
 #else
-  #define TargetArch "x64"
+  #define TargetArch "x86"
 #endif
 
 #if TargetArch == "x86"

@@ -21,7 +21,7 @@ on:
 
 # 环境变量
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '16.20.2'  # Vue CLI 4 兼容版本
   PYTHON_VERSION: '3.9'
   INNO_SETUP_VERSION: '6.2.2'
 
@@ -32,7 +32,7 @@ jobs:
     
     strategy:
       matrix:
-        architecture: [x86, x64]
+        architecture: [x86]  # 暂时专注32位版本
     
     steps:
     # 检出代码
@@ -70,6 +70,8 @@ jobs:
       run: |
         npm ci
         npm run build
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
     
     # 构建 Python 组件
     - name: Build Python Components
@@ -123,8 +125,8 @@ jobs:
           exit 1
         }
         
-        # 编译安装程序
-        iscc "installer.iss" /O"../../dist" /F"UniversityMarking-Setup-${{ matrix.architecture }}"
+        # 编译安装程序 (定义架构变量)
+        iscc "installer.iss" /DARCHITECTURE="${{ matrix.architecture }}" /O"../../dist" /F"UniversityMarking-Setup-${{ matrix.architecture }}"
         
         # 检查输出文件
         if (-not (Test-Path "../../dist/UniversityMarking-Setup-${{ matrix.architecture }}.exe")) {
@@ -211,7 +213,7 @@ jobs:
     
     strategy:
       matrix:
-        architecture: [x86, x64]
+        architecture: [x86]  # 暂时专注32位版本测试
     
     steps:
     - name: Download Installer

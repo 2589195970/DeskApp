@@ -62,16 +62,23 @@ function buildElectronApp() {
         
         // 构建 Vue 应用
         console.log('🔧 构建 Vue 应用...');
-        execSync('npm run build', { stdio: 'inherit' });
+        execSync('npm run build', { 
+            stdio: 'inherit',
+            env: {
+                ...process.env,
+                NODE_OPTIONS: '--openssl-legacy-provider'  // 兼容旧版加密算法
+            }
+        });
         
         // 构建 Electron 应用
         console.log('📦 构建 Electron 应用...');
         const electronArch = architecture === 'x86' ? 'ia32' : 'x64';
-        execSync(`npx electron-builder --${process.platform} --${electronArch} --dir`, { 
+        execSync(`npx electron-builder --win --${electronArch} --dir`, { 
             stdio: 'inherit',
             env: {
                 ...process.env,
-                ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'true'
+                ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'true',
+                NODE_OPTIONS: '--openssl-legacy-provider'  // 兼容旧版加密算法
             }
         });
         
