@@ -46,7 +46,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: '16.20.2'  # 强制指定版本
         cache: 'npm'
         cache-dependency-path: 'Electron_App/package-lock.json'
     
@@ -69,9 +69,6 @@ jobs:
       working-directory: Electron_App
       run: |
         npm ci
-        npm run build
-      env:
-        NODE_OPTIONS: --openssl-legacy-provider
     
     # 构建 Python 组件
     - name: Build Python Components
@@ -110,10 +107,18 @@ jobs:
           Copy-Item "Electron_App/public/favicon.ico" "installer/inno-setup/resources/icon.ico"
         }
     
-    # 执行构建准备脚本
-    - name: Run Build Preparation
+    # 构建 Electron 应用 (直接在Actions中)
+    - name: Build Electron App
+      working-directory: Electron_App
       run: |
-        node installer/build-scripts/prepare-build.js
+        # 构建 Vue 应用
+        npm run build
+        
+        # 构建 Electron 应用
+        npx electron-builder --win --ia32 --dir
+      env:
+        NODE_OPTIONS: --openssl-legacy-provider
+        ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
     
     # 编译安装程序
     - name: Compile Installer
