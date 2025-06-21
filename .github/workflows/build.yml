@@ -114,7 +114,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '17.9.1'
+        node-version: '16.13.0'
         cache: 'npm'
         cache-dependency-path: Electron_App/package-lock.json
         
@@ -124,7 +124,7 @@ jobs:
       
     - name: Build Electron App
       working-directory: ./Electron_App
-      run: node --openssl-legacy-provider ./node_modules/.bin/vue-cli-service electron:build
+      run: npm run electron:build
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
