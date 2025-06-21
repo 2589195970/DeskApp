@@ -36,6 +36,7 @@ jobs:
         
     - name: Upload Python Build Artifacts
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: python-lock-service-windows
         path: LockSys_Python/build/
@@ -96,6 +97,7 @@ jobs:
         
     - name: Upload Config Utility Artifacts
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: config-utility-windows
         path: ChangeConfigUtil/build/
@@ -132,9 +134,10 @@ jobs:
         
     - name: Upload Electron Build Artifacts
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: electron-app-${{ matrix.os }}
-        path: Electron_App/release/
+        path: Electron_App/dist_electron/
         retention-days: 30
 
   create-installer:
