@@ -46,7 +46,8 @@ function formatFileSize(bytes) {
 function verifyInstaller() {
   log('Verifying installer package...');
   
-  const installerPath = path.join(projectRoot, 'dist/UniversityMarking-Setup.exe');
+  const architecture = process.env.GITHUB_MATRIX_ARCHITECTURE || 'x64';
+  const installerPath = path.join(projectRoot, `dist/UniversityMarking-Setup-${architecture}.exe`);
   
   if (!fs.existsSync(installerPath)) {
     console.error('❌ Installer not found at expected location:', installerPath);
@@ -60,10 +61,17 @@ function verifyInstaller() {
   log(`File size: ${formatFileSize(fileSize)}`);
   log(`SHA256: ${fileHash}`);
   
-  // 检查文件大小是否合理（至少 1MB）
-  if (fileSize < 1024 * 1024) {
+  // 检查文件大小是否合理
+  const sizeInMB = fileSize / (1024 * 1024);
+  if (sizeInMB < 20) {
     console.error('❌ Installer file size seems too small. Possible build error.');
     return false;
+  } else if (sizeInMB < 50) {
+    console.warn('⚠️  Installer size is smaller than expected (missing Chromium?)');
+  } else if (sizeInMB > 300) {
+    console.warn('⚠️  Installer size is larger than expected');
+  } else {
+    log(`✅ Installer size is within expected range: ${formatFileSize(fileSize)}`);
   }
   
   return true;
@@ -80,9 +88,10 @@ function generateReleaseNotes() {
   }
   
   const buildInfo = JSON.parse(fs.readFileSync(buildInfoPath, 'utf8'));
-  const installerPath = path.join(projectRoot, 'dist/UniversityMarking-Setup.exe');
+  const architecture = process.env.GITHUB_MATRIX_ARCHITECTURE || 'x64';
+  const installerPath = path.join(projectRoot, `dist/UniversityMarking-Setup-${architecture}.exe`);
   
-  const releaseNotes = `# UniversityMarking 考试监考系统 v${buildInfo.version}
+  const releaseNotes = `# 智多分机考霸屏桌面端 v${buildInfo.version} (${architecture})
 
 ## 构建信息
 - 构建时间: ${buildInfo.buildTime}
@@ -100,14 +109,17 @@ function generateReleaseNotes() {
 3. 安装完成后使用桌面快捷方式启动
 
 ## 系统要求
-- Windows Vista 或更高版本
-- 管理员权限
-- 至少 100MB 可用磁盘空间
+- Windows 7 SP1 或更高版本 (${architecture === 'x86' ? '32位' : '64位'})
+- 管理员权限 (必需)
+- 至少 2GB 内存 (支持 1C 2GB 低配置)
+- 至少 200MB 可用磁盘空间
 
 ## 使用注意事项
+- 专为考试监考环境设计，支持系统级锁定
 - 请在安装前关闭杀毒软件的实时监控
 - 如遇到安装问题，请以管理员身份重新运行
 - 系统锁定功能需要管理员权限才能正常工作
+- 支持虚拟化环境下的 Win7 SP1 部署
 `;
   
   const releaseNotesPath = path.join(projectRoot, 'dist/RELEASE-NOTES.md');

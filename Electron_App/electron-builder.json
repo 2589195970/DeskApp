@@ -2,25 +2,47 @@
     "productName": "智多分机考霸屏桌面端",
     "appId": "zhiduofen.exam.deskapp",
     "directories": {
-      "output": "dist_electron" 
+      "output": "dist_electron"
     },
-    "files": ["dist_electron","build","config"],
-    "extraResources": ["config","build"],
+    "files": [
+      "dist/**/*",
+      "build/**/*",
+      "config/**/*",
+      "node_modules/**/*",
+      "background.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "config/",
+        "to": "config/"
+      }
+    ],
     "asar": true,
+    "compression": "maximum",
     "nsis": {
       "oneClick": false,
       "language": "2052",
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "include": "installer-script.nsh"
     },
     "win": {
       "icon": "public/favicon.ico",
-      "target": {
-        "target": "nsis",
-        "arch": ["x64", "ia32"]
-      }
-    }
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        },
+        {
+          "target": "dir",
+          "arch": ["x64", "ia32"]
+        }
+      ],
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "electronVersion": "11.5.0"
   }
   
