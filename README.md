@@ -55,11 +55,13 @@
 
 ## 系统要求
 
-- **操作系统**: Windows 10/11 (推荐)
+- **操作系统**: Windows 10/11 (**仅支持 Windows**)
 - **权限**: 管理员权限 (必需)
 - **内存**: 2GB+ RAM
 - **网络**: 稳定的互联网连接
 - **浏览器**: Chromium 内核 (内置)
+
+> ⚠️ **重要说明**: 本软件专为 Windows 设计，使用了 Windows 特有的系统 API 和权限模型，不支持 macOS 或 Linux 系统。
 
 ## 快速开始
 
@@ -146,7 +148,7 @@ python ChangeConfigUtil/main.py
 |-----|------|------|------|
 | `build-python-service` | Windows | Python 锁定服务 .exe | 系统级服务打包 |
 | `build-config-util` | Windows | 配置工具 .exe | GUI 配置程序 |
-| `build-electron-app` | 多平台 | Electron 应用 | 主界面应用程序 |
+| `build-electron-app` | Windows | Electron 应用 | 主界面应用程序 |
 
 ### 📦 打包阶段
 

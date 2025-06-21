@@ -105,11 +105,7 @@ jobs:
 
   build-electron-app:
     name: Build Electron Application
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     
     steps:
     - name: Checkout code
@@ -125,14 +121,16 @@ jobs:
     - name: Install dependencies
       working-directory: ./Electron_App
       run: |
-        export NODE_OPTIONS="--openssl-legacy-provider"
+        $env:NODE_OPTIONS="--openssl-legacy-provider"
         npm ci
+      shell: powershell
       
     - name: Build Electron App
       working-directory: ./Electron_App
       run: |
-        export NODE_OPTIONS="--openssl-legacy-provider"
+        $env:NODE_OPTIONS="--openssl-legacy-provider"
         npm run electron:build
+      shell: powershell
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
@@ -140,7 +138,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: electron-app-${{ matrix.os }}
+        name: electron-app-windows
         path: Electron_App/dist_electron/
         retention-days: 30
 
@@ -166,8 +164,8 @@ jobs:
         New-Item -ItemType Directory -Force -Path ".\ChangeConfigUtil\dist\win64"
         
         # Copy artifacts to expected locations
-        if (Test-Path "electron-app-windows-latest") {
-          Copy-Item -Path "electron-app-windows-latest\*" -Destination ".\Electron_App\dist\" -Recurse -Force
+        if (Test-Path "electron-app-windows") {
+          Copy-Item -Path "electron-app-windows\*" -Destination ".\Electron_App\dist\" -Recurse -Force
         }
         
         if (Test-Path "python-lock-service-windows") {
@@ -239,8 +237,8 @@ jobs:
         fi
         
         # Copy Windows Electron app
-        if [ -d "electron-app-windows-latest" ]; then
-          cp -r electron-app-windows-latest/* release-package/Electron_App/
+        if [ -d "electron-app-windows" ]; then
+          cp -r electron-app-windows/* release-package/Electron_App/
         fi
         
         # Copy batch files
