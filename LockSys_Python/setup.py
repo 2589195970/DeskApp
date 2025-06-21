@@ -20,35 +20,8 @@ executables = [
 
 # 构建选项
 build_options = {
-    "packages": [
-        "flask", 
-        "gevent", 
-        "threading", 
-        "logging", 
-        "logging.handlers",  # 新增：日志轮转支持
-        "PyHook3", 
-        "portalocker",
-        "ctypes",
-        "winreg",
-        "pythoncom",
-        "os",
-        "sys",
-        "socket",
-        "traceback"
-    ],
-    "excludes": [
-        "unittest",
-        "email", 
-        "html",
-        "urllib",
-        "xml",
-        "test"
-    ],
-    "include_files": [
-        # 包含配置文件和其他资源
-    ],
-    "zip_include_packages": ["*"],  # 压缩包减小体积
-    "optimize": 2,  # 最高级别优化
+    "include_files": [],
+    "optimize": 2,
     "build_exe": "build/UniversityMarking_LockService"
 }
 

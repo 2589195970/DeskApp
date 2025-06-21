@@ -78,7 +78,6 @@ jobs:
             "build_exe": {
                 "packages": ["tkinter", "json", "os"],
                 "include_files": [],
-                "zip_include_packages": ["*"],
             },
         }
         
