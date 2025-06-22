@@ -298,7 +298,7 @@ jobs:
         
         if (-not $electronUnpackedDir) {
           Write-Error "✗ No Electron unpacked directory found"
-          Write-Output "Available directories in $electronBaseDir:"
+          Write-Output "Available directories in ${electronBaseDir}:"
           if (Test-Path $electronBaseDir) {
             Get-ChildItem $electronBaseDir -Directory | ForEach-Object { Write-Output "  - $($_.Name)" }
           }
