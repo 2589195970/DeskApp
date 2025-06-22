@@ -30,7 +30,6 @@
       "include": "installer-script.nsh"
     },
     "win": {
-      "icon": "public/favicon.ico",
       "target": [
         {
           "target": "nsis",
