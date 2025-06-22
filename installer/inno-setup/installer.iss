@@ -57,7 +57,7 @@ ArchitecturesInstallIn64BitMode=x64
 #endif
 
 [Languages]
-Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimp.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Types]
