@@ -44,11 +44,22 @@ jobs:
     
     # 设置 Node.js 环境
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
-        node-version: '16.20.2'  # 强制指定版本
+        node-version: '16.20.2'
         cache: 'npm'
         cache-dependency-path: 'Electron_App/package-lock.json'
+    
+    # 验证 Node.js 版本
+    - name: Verify Node.js Version
+      run: |
+        Write-Output "Node.js version: $(node --version)"
+        Write-Output "npm version: $(npm --version)"
+        $nodeVersion = node --version
+        if ($nodeVersion -ne "v16.20.2") {
+          Write-Error "Error: Node.js version mismatch! Expected v16.20.2, got $nodeVersion"
+          exit 1
+        }
     
     # 设置 Python 环境
     - name: Setup Python
@@ -69,19 +80,21 @@ jobs:
       working-directory: Electron_App
       run: |
         npm ci
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
     
     # 构建 Python 组件
     - name: Build Python Components
       run: |
-        # 构建系统锁定服务
+        # 构建系统锁定服务 (32位)
         cd LockSys_Python
-        mkdir -p dist/win${{ matrix.architecture == 'x64' && '64' || '32' }}
-        pyinstaller --onefile --distpath dist/win${{ matrix.architecture == 'x64' && '64' || '32' }} main.py
+        mkdir -p dist/win32
+        pyinstaller --onefile --distpath dist/win32 main.py
         
-        # 构建配置工具
+        # 构建配置工具 (32位)
         cd ../ChangeConfigUtil
-        mkdir -p dist/win${{ matrix.architecture == 'x64' && '64' || '32' }}
-        pyinstaller --onefile --windowed --distpath dist/win${{ matrix.architecture == 'x64' && '64' || '32' }} main.py
+        mkdir -p dist/win32
+        pyinstaller --onefile --windowed --distpath dist/win32 main.py
     
     # 安装 Inno Setup
     - name: Install Inno Setup
@@ -111,10 +124,11 @@ jobs:
     - name: Build Electron App
       working-directory: Electron_App
       run: |
-        # 使用 vue-cli-plugin-electron-builder 统一构建
-        npm run electron:build -- --win --ia32 --dir
+        # 使用 vue-cli-plugin-electron-builder 统一构建32位版本
+        npm run electron:build -- --win --ia32
       env:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+        NODE_OPTIONS: "--max-old-space-size=4096"
     
     # 编译安装程序
     - name: Compile Installer
@@ -126,11 +140,11 @@ jobs:
           exit 1
         }
         
-        # 编译安装程序 (定义架构变量)
-        iscc "installer.iss" /DARCHITECTURE="${{ matrix.architecture }}" /O"../../dist" /F"UniversityMarking-Setup-${{ matrix.architecture }}"
+        # 编译安装程序 (32位版本)
+        iscc "installer.iss" /DARCHITECTURE="x86" /O"../../dist" /F"UniversityMarking-Setup-x86"
         
         # 检查输出文件
-        if (-not (Test-Path "../../dist/UniversityMarking-Setup-${{ matrix.architecture }}.exe")) {
+        if (-not (Test-Path "../../dist/UniversityMarking-Setup-x86.exe")) {
           Write-Error "Installer compilation failed!"
           exit 1
         }
@@ -167,7 +181,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          dist/UniversityMarking-Setup-${{ matrix.architecture }}.exe
+          dist/UniversityMarking-Setup-x86.exe
           dist/checksums.txt
           dist/RELEASE-NOTES.md
         draft: false

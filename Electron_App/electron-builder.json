@@ -34,11 +34,11 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "ia32"]
+          "arch": ["ia32", "x64"]
         },
         {
           "target": "dir",
-          "arch": ["x64", "ia32"]
+          "arch": ["ia32", "x64"]
         }
       ],
       "requestedExecutionLevel": "requireAdministrator"
