@@ -57,26 +57,19 @@ ArchitecturesInstallIn64BitMode=x64
 #endif
 
 [Languages]
-Name: "chinesesimp"; MessagesFile: "compiler:Languages\ChineseSimp.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Types]
-Name: "full"; Description: "完整安装"; Languages: chinesesimp
-Name: "full"; Description: "Full installation"; Languages: english
-Name: "custom"; Description: "自定义安装"; Flags: iscustom; Languages: chinesesimp
-Name: "custom"; Description: "Custom installation"; Flags: iscustom; Languages: english
+Name: "full"; Description: "Full installation"
+Name: "custom"; Description: "Custom installation"; Flags: iscustom
 
 [Components]
-Name: "main"; Description: "主程序 ({#ArchDisplay})"; Types: full custom; Flags: fixed; Languages: chinesesimp
-Name: "main"; Description: "Main Application ({#ArchDisplay})"; Types: full custom; Flags: fixed; Languages: english
-Name: "lockservice"; Description: "系统锁定服务"; Types: full custom; Languages: chinesesimp
-Name: "lockservice"; Description: "System Lock Service"; Types: full custom; Languages: english
-Name: "configtool"; Description: "配置工具"; Types: full custom; Languages: chinesesimp
-Name: "configtool"; Description: "Configuration Tool"; Types: full custom; Languages: english
+Name: "main"; Description: "Main Application ({#ArchDisplay})"; Types: full custom; Flags: fixed
+Name: "lockservice"; Description: "System Lock Service"; Types: full custom
+Name: "configtool"; Description: "Configuration Tool"; Types: full custom
 
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面图标"; GroupDescription: "附加图标:"; Languages: chinesesimp
-Name: "desktopicon"; Description: "Create a desktop icon"; GroupDescription: "Additional icons:"; Languages: english
+Name: "desktopicon"; Description: "Create a desktop icon"; GroupDescription: "Additional icons:"
 
 [Files]
 ; 主程序文件 - Electron App (架构相关)
@@ -116,8 +109,7 @@ Name: "{group}\使用说明"; Filename: "{app}\README.md"; WorkingDir: "{app}"
 Name: "{group}\卸载 {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\start.bat"; Description: "立即启动 {#MyAppName}"; Flags: nowait postinstall skipifsilent; Languages: chinesesimp
-Filename: "{app}\start.bat"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent; Languages: english
+Filename: "{app}\start.bat"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\logs"
