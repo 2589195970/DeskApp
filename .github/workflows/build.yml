@@ -124,27 +124,109 @@ jobs:
     - name: Build Electron App
       working-directory: Electron_App
       run: |
-        # 使用 vue-cli-plugin-electron-builder 统一构建32位版本 (dir target for unpacked files)
+        Write-Output "=== Electron Build Diagnostics ==="
+        Write-Output "Node.js version: $(node --version)"
+        Write-Output "NPM version: $(npm --version)"
+        Write-Output "Current directory: $(Get-Location)"
+        
+        Write-Output "`n=== Checking package.json scripts ==="
+        if (Test-Path "package.json") {
+          $packageJson = Get-Content "package.json" | ConvertFrom-Json
+          Write-Output "Available scripts:"
+          $packageJson.scripts.PSObject.Properties | ForEach-Object { Write-Output "  $($_.Name): $($_.Value)" }
+        }
+        
+        Write-Output "`n=== Checking electron-builder.json ==="
+        if (Test-Path "electron-builder.json") {
+          $builderConfig = Get-Content "electron-builder.json" | ConvertFrom-Json
+          Write-Output "Output directory: $($builderConfig.directories.output)"
+          Write-Output "Win targets:"
+          $builderConfig.win.target | ForEach-Object { Write-Output "  Target: $($_.target), Arch: $($_.arch)" }
+        }
+        
+        Write-Output "`n=== Starting Electron Build ==="
+        Write-Output "Command: npm run electron:build -- --win --ia32 --dir"
+        
+        # 执行构建并捕获所有输出
+        $env:DEBUG = "electron-builder"
         npm run electron:build -- --win --ia32 --dir
+        $buildExitCode = $LASTEXITCODE
+        
+        Write-Output "`n=== Build Exit Code: $buildExitCode ==="
+        
+        Write-Output "`n=== Checking dist_electron directory structure ==="
+        if (Test-Path "dist_electron") {
+          Write-Output "✓ dist_electron directory exists"
+          Write-Output "Contents of dist_electron:"
+          Get-ChildItem "dist_electron" -Recurse | ForEach-Object {
+            $relativePath = $_.FullName.Replace((Get-Location).Path, "").TrimStart('\')
+            if ($_.PSIsContainer) {
+              Write-Output "  [DIR]  $relativePath"
+            } else {
+              Write-Output "  [FILE] $relativePath ($($_.Length) bytes)"
+            }
+          }
+        } else {
+          Write-Error "✗ dist_electron directory does not exist!"
+        }
+        
+        Write-Output "`n=== Looking for expected output ==="
+        $expectedDirs = @("win-ia32-unpacked", "win-unpacked", "unpacked")
+        $foundDir = $null
+        
+        foreach ($dir in $expectedDirs) {
+          $fullPath = "dist_electron\$dir"
+          if (Test-Path $fullPath) {
+            Write-Output "✓ Found directory: $fullPath"
+            $foundDir = $fullPath
+            break
+          }
+        }
+        
+        if (-not $foundDir) {
+          Write-Error "✗ No unpacked directory found. Available directories:"
+          if (Test-Path "dist_electron") {
+            Get-ChildItem "dist_electron" -Directory | ForEach-Object { Write-Output "  - $($_.Name)" }
+          }
+          exit 1
+        }
+        
+        if ($buildExitCode -ne 0) {
+          Write-Error "Electron build failed with exit code: $buildExitCode"
+          exit $buildExitCode
+        }
+        
+        Write-Output "`n=== Build completed successfully ==="
       env:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
         NODE_OPTIONS: "--max-old-space-size=4096"
     
-    # 验证构建输出
-    - name: Verify Build Output
+    # 验证构建输出并动态适配目录结构
+    - name: Verify Build Output and Adapt
       run: |
-        Write-Output "Verifying Electron build output..."
+        Write-Output "=== Final Build Verification ==="
         
-        # 检查Electron输出目录
-        $electronOutput = "Electron_App\dist_electron\win-ia32-unpacked"
-        if (Test-Path $electronOutput) {
-          Write-Output "✓ Electron unpacked directory found: $electronOutput"
-          Get-ChildItem $electronOutput -Recurse | Select-Object -First 10 | ForEach-Object { Write-Output "  - $($_.FullName)" }
-        } else {
-          Write-Error "✗ Electron unpacked directory not found: $electronOutput"
-          Write-Output "Available directories in Electron_App\dist_electron:"
-          if (Test-Path "Electron_App\dist_electron") {
-            Get-ChildItem "Electron_App\dist_electron" | ForEach-Object { Write-Output "  - $($_.Name)" }
+        # 动态查找Electron unpacked目录
+        $electronBaseDir = "Electron_App\dist_electron"
+        $electronUnpackedDir = $null
+        
+        if (Test-Path $electronBaseDir) {
+          $possibleDirs = @("win-ia32-unpacked", "win-unpacked", "*unpacked*")
+          foreach ($pattern in $possibleDirs) {
+            $matches = Get-ChildItem $electronBaseDir -Directory -Name $pattern -ErrorAction SilentlyContinue
+            if ($matches) {
+              $electronUnpackedDir = "$electronBaseDir\$($matches[0])"
+              Write-Output "✓ Found Electron unpacked directory: $electronUnpackedDir"
+              break
+            }
+          }
+        }
+        
+        if (-not $electronUnpackedDir) {
+          Write-Error "✗ No Electron unpacked directory found"
+          Write-Output "Available directories in $electronBaseDir:"
+          if (Test-Path $electronBaseDir) {
+            Get-ChildItem $electronBaseDir -Directory | ForEach-Object { Write-Output "  - $($_.Name)" }
           }
           exit 1
         }
@@ -157,58 +239,107 @@ jobs:
           Write-Output "✓ Python Lock Service found: $pythonLock"
         } else {
           Write-Error "✗ Python Lock Service not found: $pythonLock"
+          exit 1
         }
         
         if (Test-Path $pythonConfig) {
           Write-Output "✓ Python Config Tool found: $pythonConfig"
         } else {
           Write-Error "✗ Python Config Tool not found: $pythonConfig"
+          exit 1
         }
+        
+        Write-Output "`n=== Setting up environment variables for next steps ==="
+        $unpackedDirName = Split-Path $electronUnpackedDir -Leaf
+        Write-Output "ELECTRON_UNPACKED_DIR=$unpackedDirName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        Write-Output "Environment variable set: ELECTRON_UNPACKED_DIR=$unpackedDirName"
     
-    # 编译安装程序
-    - name: Compile Installer
+    # 编译安装程序 (动态适配)
+    - name: Compile Installer with Dynamic Paths
       working-directory: installer/inno-setup
       run: |
+        Write-Output "=== Preparing Installer Compilation ==="
+        
         # 检查Inno Setup脚本存在
         if (-not (Test-Path "installer.iss")) {
           Write-Error "installer.iss not found!"
           exit 1
         }
         
+        # 使用环境变量中的实际目录名
+        $electronDirName = $env:ELECTRON_UNPACKED_DIR
+        if (-not $electronDirName) {
+          Write-Error "ELECTRON_UNPACKED_DIR environment variable not set!"
+          exit 1
+        }
+        
+        Write-Output "Using Electron directory: $electronDirName"
+        
         # 检查关键源文件是否存在
         Write-Output "Checking source files for Inno Setup..."
         
-        $electronSource = "..\..\Electron_App\dist_electron\win-ia32-unpacked"
+        $electronSource = "..\..\Electron_App\dist_electron\$electronDirName"
         $pythonLockSource = "..\..\LockSys_Python\dist\win32"
         $pythonConfigSource = "..\..\ChangeConfigUtil\dist\win32"
         
+        Write-Output "Checking: $electronSource"
         if (-not (Test-Path $electronSource)) {
           Write-Error "Electron source not found: $electronSource"
+          Write-Output "Available directories in ..\..\Electron_App\dist_electron:"
+          Get-ChildItem "..\..\Electron_App\dist_electron" -Directory | ForEach-Object { Write-Output "  - $($_.Name)" }
           exit 1
+        } else {
+          Write-Output "✓ Electron source verified: $electronSource"
         }
         
+        Write-Output "Checking: $pythonLockSource"
         if (-not (Test-Path $pythonLockSource)) {
           Write-Error "Python Lock Service source not found: $pythonLockSource"
           exit 1
+        } else {
+          Write-Output "✓ Python Lock Service verified: $pythonLockSource"
         }
         
+        Write-Output "Checking: $pythonConfigSource"
         if (-not (Test-Path $pythonConfigSource)) {
           Write-Error "Python Config Tool source not found: $pythonConfigSource"
           exit 1
+        } else {
+          Write-Output "✓ Python Config Tool verified: $pythonConfigSource"
         }
         
-        Write-Output "All source files verified. Compiling installer..."
+        Write-Output "`n=== Creating dynamic installer script ==="
+        
+        # 创建临时的installer脚本，替换动态路径
+        $originalScript = Get-Content "installer.iss" -Raw
+        $modifiedScript = $originalScript -replace 'win-\{#ArchSuffix\}-unpacked', $electronDirName
+        $tempScript = "installer_temp.iss"
+        $modifiedScript | Out-File -FilePath $tempScript -Encoding UTF8
+        
+        Write-Output "Created temporary installer script with dynamic path: $tempScript"
+        Write-Output "Electron source path in script: $electronDirName"
+        
+        Write-Output "`n=== Compiling installer ==="
+        Write-Output "Command: iscc `"$tempScript`" /DARCHITECTURE=`"x86`" /O`"../../dist`" /F`"UniversityMarking-Setup-x86`""
         
         # 编译安装程序 (32位版本)
-        iscc "installer.iss" /DARCHITECTURE="x86" /O"../../dist" /F"UniversityMarking-Setup-x86"
+        iscc "$tempScript" /DARCHITECTURE="x86" /O"../../dist" /F"UniversityMarking-Setup-x86"
+        $compileExitCode = $LASTEXITCODE
+        
+        # 清理临时文件
+        Remove-Item $tempScript -ErrorAction SilentlyContinue
+        
+        Write-Output "`n=== Compilation Exit Code: $compileExitCode ==="
         
         # 检查输出文件
         if (-not (Test-Path "../../dist/UniversityMarking-Setup-x86.exe")) {
-          Write-Error "Installer compilation failed!"
+          Write-Error "Installer compilation failed! Output file not found."
           exit 1
         }
         
-        Write-Output "Installer compilation successful!"
+        $installerSize = (Get-Item "../../dist/UniversityMarking-Setup-x86.exe").Length
+        Write-Output "✓ Installer compilation successful!"
+        Write-Output "✓ Output file: ../../dist/UniversityMarking-Setup-x86.exe ($installerSize bytes)"
     
     # 执行构建后处理
     - name: Post-build Processing
