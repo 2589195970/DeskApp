@@ -278,7 +278,7 @@ async function syncReq(url, options = {}) {
   
   // 所有重试都失败
   console.error(`网络请求最终失败: ${url}`, lastError);
-  throw new Error(`网络请求失败: ${lastError?.message || '未知错误'}`);
+  throw new Error(`网络请求失败: ${(lastError && lastError.message) || '未知错误'}`);
 }
 
 // 清理网络资源的函数
