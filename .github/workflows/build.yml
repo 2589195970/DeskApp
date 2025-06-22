@@ -112,10 +112,10 @@ jobs:
       working-directory: Electron_App
       run: |
         # 构建 Vue 应用
-        node --openssl-legacy-provider ./node_modules/.bin/npm run build
+        npm run build
         
         # 构建 Electron 应用
-        node --openssl-legacy-provider ./node_modules/.bin/npx electron-builder --win --ia32 --dir
+        npx electron-builder --win --ia32 --dir
       env:
         ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
     
